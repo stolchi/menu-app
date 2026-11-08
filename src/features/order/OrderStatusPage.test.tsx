@@ -42,6 +42,7 @@ const ORDER = {
 };
 
 let status = 'ACCEPTED';
+let extra: Record<string, unknown> = {};
 
 function show(type = 'DINE_IN') {
   vi.stubGlobal(
@@ -57,7 +58,9 @@ function show(type = 'DINE_IN') {
         );
       }
       if (path.endsWith('/orders/tok')) {
-        return new Response(JSON.stringify({ ...ORDER, type, status }));
+        return new Response(
+          JSON.stringify({ ...ORDER, type, status, ...extra }),
+        );
       }
       return new Response(JSON.stringify({ message: 'Not Found' }), {
         status: 404,
@@ -126,6 +129,28 @@ describe('OrderStatusPage', () => {
     status = 'READY';
     show('TAKEAWAY');
     expect(await screen.findByText(uz.order.readyTakeaway)).toBeInTheDocument();
+  });
+
+  it('reads the order again when staff change it', async () => {
+    status = 'ACCEPTED';
+    extra = {};
+    show();
+    expect(await screen.findAllByText("90 000 so'm")).not.toHaveLength(0);
+    await waitFor(() =>
+      expect(sockets.at(-1)?.handlers['order.changed']).toBeDefined(),
+    );
+    extra = { total: 135000, itemsTotal: 135000 };
+    sockets.at(-1)?.handlers['order.changed']();
+    expect(await screen.findAllByText("135 000 so'm")).not.toHaveLength(0);
+    extra = {};
+  });
+
+  it('tells the customer why it was cancelled', async () => {
+    status = 'CANCELLED';
+    extra = { cancelReason: 'Osh tugagan' };
+    show();
+    expect(await screen.findByText('Osh tugagan')).toBeInTheDocument();
+    extra = {};
   });
 
   it('says so when cancelled, and stops listening', async () => {

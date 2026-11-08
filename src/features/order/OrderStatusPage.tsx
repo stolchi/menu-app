@@ -82,6 +82,11 @@ export function OrderStatusPage() {
         >
           {t(`order.headline.${order.data.status}`)}
         </h1>
+        {cancelled && order.data.cancelReason && (
+          <p className="mt-2 rounded-2xl bg-destructive/10 p-3 font-medium text-destructive">
+            {order.data.cancelReason}
+          </p>
+        )}
         {cancelled && (
           <p className="mt-1 text-muted-foreground">
             {t('order.cancelledHint')}

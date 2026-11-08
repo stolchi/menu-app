@@ -23,6 +23,8 @@ export function useOrderUpdates(
       // On connect too: the phone may have been asleep through a change.
       socket.on('connect', () => update());
       socket.on('order.status_changed', () => update());
+      // Staff changed what is on it or what it costs, or cancelled it.
+      socket.on('order.changed', () => update());
     });
     return () => {
       stopped = true;

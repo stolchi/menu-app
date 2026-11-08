@@ -8,6 +8,7 @@
 export * from './createOrderItemDto';
 export * from './createPublicOrderDto';
 export * from './createPublicOrderDtoType';
+export * from './locationDto';
 export * from './orderStatus';
 export * from './orderType';
 export * from './productUnit';
