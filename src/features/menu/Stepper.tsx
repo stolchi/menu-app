@@ -5,10 +5,15 @@ export function Stepper({
   name,
   quantity,
   onChange,
+  step = 1,
+  label = String(quantity),
 }: {
   name: string;
   quantity: number;
   onChange: (quantity: number) => void;
+  /** 500 for a weight in grams. */
+  step?: number;
+  label?: string;
 }) {
   const { t } = useTranslation();
   const button =
@@ -19,16 +24,18 @@ export function Stepper({
         type="button"
         className={button}
         aria-label={t('menu.decrease', { name })}
-        onClick={() => onChange(quantity - 1)}
+        onClick={() => onChange(quantity - step)}
       >
         <Minus className="size-4" />
       </button>
-      <span className="w-6 text-center font-bold tabular-nums">{quantity}</span>
+      <span className="min-w-6 px-0.5 text-center font-bold whitespace-nowrap tabular-nums">
+        {label}
+      </span>
       <button
         type="button"
         className={button}
         aria-label={t('menu.increase', { name })}
-        onClick={() => onChange(quantity + 1)}
+        onClick={() => onChange(quantity + step)}
       >
         <Plus className="size-4" />
       </button>

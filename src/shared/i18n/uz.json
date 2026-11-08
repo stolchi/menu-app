@@ -25,7 +25,13 @@
     "decrease": "{{name}} sonini kamaytirish",
     "yourOrder": "Buyurtmangiz #{{number}}",
     "yourOrderHint": "Holatini ko'rish",
-    "viewOnly": "Bu menyu faqat ko'rish uchun. Buyurtmani xodimga ayting."
+    "viewOnly": "Bu menyu faqat ko'rish uchun. Buyurtmani xodimga ayting.",
+    "perKg": "kg",
+    "fromPrice": "{{price}} dan",
+    "weightHint": "Taxminiy og'irlik. Narx tortilgandan keyin aniqlanadi",
+    "chooseSize": "{{name}}: o'lchamni tanlash",
+    "choose": "Tanlash",
+    "done": "Tayyor"
   },
   "cart": {
     "open": "Savat",
@@ -38,7 +44,8 @@
     "notePlaceholder": "Masalan, achchiq bo'lmasin",
     "payHint": "To'lov kassada yoki xodimga qilinadi",
     "order": "Buyurtma berish",
-    "ordering": "Yuborilmoqda..."
+    "ordering": "Yuborilmoqda...",
+    "weightNote": "Og'irlikli taomlar narxi taxminiy: tortilgandan keyin aniqlanadi"
   },
   "order": {
     "number": "Buyurtma raqamingiz",
@@ -61,7 +68,9 @@
     "cancelledHint": "Savolingiz bo'lsa, xodimga murojaat qiling",
     "items": "Buyurtma tarkibi",
     "backToMenu": "Menyuga qaytish",
-    "notFound": "Bunday buyurtma topilmadi"
+    "notFound": "Bunday buyurtma topilmadi",
+    "notWeighed": "tortilmoqda",
+    "weightNote": "Og'irlik tortilgach narx aniqlanadi"
   },
   "amounts": {
     "items": "Taomlar",

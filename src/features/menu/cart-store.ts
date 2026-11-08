@@ -1,10 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { MAX_GRAMS } from '@/shared/lib/quantity';
 
 export const MAX_QUANTITY = 999;
 
 export interface CafeCart {
-  /** Quantities by product. Names and prices are read from the live menu. */
+  /**
+   * Quantities by product, or by product and size (`lineKey`): pieces, or grams for
+   * a weighed product. Names and prices are read from the live menu.
+   */
   lines: Record<string, number>;
   note: string;
   /** Lets the customer get back to their order after leaving the page. */
@@ -16,7 +20,13 @@ const EMPTY: CafeCart = { lines: {}, note: '', lastOrderToken: null };
 interface CartState {
   /** By cafe slug: one phone can scan the codes of several cafes. */
   carts: Record<string, CafeCart>;
-  setQuantity: (slug: string, productId: string, quantity: number) => void;
+  setQuantity: (
+    slug: string,
+    key: string,
+    quantity: number,
+    /** Grams for a weighed product. */
+    weighed?: boolean,
+  ) => void;
   setNote: (slug: string, note: string) => void;
   /** The order went through: the cart starts over, and the order is remembered. */
   finish: (slug: string, orderToken: string) => void;
@@ -36,14 +46,20 @@ export const useCartStore = create<CartState>()(
 
       return {
         carts: {},
-        setQuantity: (slug, productId, quantity) =>
+        setQuantity: (slug, key, quantity, weighed = false) =>
           patch(slug, ({ lines }) => ({
             lines:
               quantity < 1
                 ? Object.fromEntries(
-                    Object.entries(lines).filter(([id]) => id !== productId),
+                    Object.entries(lines).filter(([id]) => id !== key),
                   )
-                : { ...lines, [productId]: Math.min(quantity, MAX_QUANTITY) },
+                : {
+                    ...lines,
+                    [key]: Math.min(
+                      quantity,
+                      weighed ? MAX_GRAMS : MAX_QUANTITY,
+                    ),
+                  },
           })),
         setNote: (slug, note) => patch(slug, () => ({ note })),
         finish: (slug, orderToken) =>

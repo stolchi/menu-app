@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { ApiError } from '@/shared/api/client';
+import type { PublicProductDto } from '@/shared/api/generated/model';
 import {
   usePublicControllerMenu,
   usePublicControllerOrderStatus,
@@ -13,10 +14,12 @@ import { useCafeTheme } from '@/shared/lib/cafe-theme';
 import { formatMoney } from '@/shared/lib/format';
 import { amountsOf, orderTypeFor } from '@/shared/lib/order-charges';
 import { MessageScreen } from '@/shared/MessageScreen';
+import { cartItems, countOf } from './cart-lines';
 import { CartSheet } from './CartSheet';
 import { useCafeCart, useCartStore } from './cart-store';
 import { CategoryTabs, sectionId } from './CategoryTabs';
 import { ProductRow } from './ProductRow';
+import { SizeSheet } from './SizeSheet';
 
 /** Roughly what fits on a phone before scrolling. */
 const EAGER_IMAGES = 4;
@@ -70,6 +73,7 @@ export function MenuPage() {
   const [params] = useSearchParams();
   const qrToken = params.get('table');
   const [cartOpen, setCartOpen] = useState(false);
+  const [sizing, setSizing] = useState<PublicProductDto | null>(null);
 
   const menu = usePublicControllerMenu(slug, {
     query: {
@@ -118,10 +122,10 @@ export function MenuPage() {
 
   const orderType = orderTypeFor(cafe.orderTypes, verifiedTable !== null);
 
-  const inCart = products.filter((product) => cart.lines[product.id]);
-  const count = inCart.reduce((sum, p) => sum + cart.lines[p.id], 0);
+  const items = cartItems(cart.lines, products);
+  const count = countOf(items);
   const { total } = amountsOf(
-    inCart.reduce((sum, p) => sum + p.price * cart.lines[p.id], 0),
+    items.reduce((sum, item) => sum + item.total, 0),
     orderType ?? 'TAKEAWAY',
     cafe,
   );
@@ -194,10 +198,24 @@ export function MenuPage() {
                     <ProductRow
                       key={product.id}
                       product={product}
-                      quantity={cart.lines[product.id] ?? 0}
+                      quantity={
+                        product.variants.length > 0
+                          ? countOf(
+                              items.filter(
+                                (item) => item.product.id === product.id,
+                              ),
+                            )
+                          : (cart.lines[product.id] ?? 0)
+                      }
+                      onChooseSize={() => setSizing(product)}
                       eager={shown++ < EAGER_IMAGES}
                       onChange={(quantity) =>
-                        setQuantity(slug, product.id, quantity)
+                        setQuantity(
+                          slug,
+                          product.id,
+                          quantity,
+                          product.unit === 'KG',
+                        )
                       }
                     />
                   ))}
@@ -222,6 +240,7 @@ export function MenuPage() {
           </button>
         </div>
       )}
+      <SizeSheet slug={slug} product={sizing} onClose={() => setSizing(null)} />
       <CartSheet
         slug={slug}
         cafe={cafe}

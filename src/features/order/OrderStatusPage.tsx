@@ -9,6 +9,7 @@ import {
 import { AmountList } from '@/shared/AmountList';
 import { useCafeTheme } from '@/shared/lib/cafe-theme';
 import { formatMoney } from '@/shared/lib/format';
+import { lineTotal, quantityLabel } from '@/shared/lib/quantity';
 import { MessageScreen } from '@/shared/MessageScreen';
 import { isOver, stepOf, STEPS } from './order-steps';
 import { useOrderUpdates } from './use-order-updates';
@@ -134,10 +135,16 @@ export function OrderStatusPage() {
           {items.map((item, index) => (
             <li key={index} className="flex justify-between gap-3 py-2">
               <span>
-                {item.quantity} × {item.name}
+                {quantityLabel(item.unit, item.quantity)} {item.name}
+                {!item.weighed && (
+                  <span className="ml-1.5 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                    {t('order.notWeighed')}
+                  </span>
+                )}
               </span>
               <span className="whitespace-nowrap">
-                {formatMoney(item.price * item.quantity)}
+                {!item.weighed && '≈ '}
+                {formatMoney(lineTotal(item.price, item.quantity, item.unit))}
               </span>
             </li>
           ))}
@@ -146,6 +153,11 @@ export function OrderStatusPage() {
           amounts={order.data}
           className="mt-2 border-t border-border pt-3"
         />
+        {items.some((item) => !item.weighed) && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t('order.weightNote')}
+          </p>
+        )}
       </section>
       <Link
         to={`/${slug}${table ? `?table=${table}` : ''}`}

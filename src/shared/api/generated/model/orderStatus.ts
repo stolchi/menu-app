@@ -5,7 +5,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
+export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];
+
 
 export const OrderStatus = {
   NEW: 'NEW',

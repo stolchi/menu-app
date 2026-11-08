@@ -5,8 +5,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type CreatePublicOrderDtoType =
-  (typeof CreatePublicOrderDtoType)[keyof typeof CreatePublicOrderDtoType];
+export type CreatePublicOrderDtoType = typeof CreatePublicOrderDtoType[keyof typeof CreatePublicOrderDtoType];
+
 
 export const CreatePublicOrderDtoType = {
   DINE_IN: 'DINE_IN',

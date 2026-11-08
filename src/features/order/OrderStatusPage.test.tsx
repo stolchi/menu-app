@@ -29,7 +29,16 @@ const ORDER = {
   type: 'DINE_IN',
   total: 90000,
   createdAt: '2026-01-31T10:00:00Z',
-  items: [{ name: 'Osh', price: 45000, quantity: 2, note: null }],
+  items: [
+    {
+      name: 'Osh',
+      price: 45000,
+      unit: 'PIECE',
+      quantity: 2,
+      weighed: true,
+      note: null,
+    },
+  ],
 };
 
 let status = 'ACCEPTED';

@@ -11,6 +11,8 @@ import type {
 import { AmountList } from '@/shared/AmountList';
 import { formatMoney } from '@/shared/lib/format';
 import { amountsOf } from '@/shared/lib/order-charges';
+import { formatWeight, WEIGHT_STEP } from '@/shared/lib/quantity';
+import { cartItems } from './cart-lines';
 import { useCafeCart, useCartStore } from './cart-store';
 import { Stepper } from './Stepper';
 
@@ -63,14 +65,9 @@ export function CartSheet({
   }, [open]);
 
   // A product deleted from the menu meanwhile simply drops out of the cart.
-  const lines = products.flatMap((product) => {
-    const quantity = cart.lines[product.id];
-    return quantity ? [{ product, quantity }] : [];
-  });
-  const itemsTotal = lines.reduce(
-    (sum, { product, quantity }) => sum + product.price * quantity,
-    0,
-  );
+  const lines = cartItems(cart.lines, products);
+  const itemsTotal = lines.reduce((sum, line) => sum + line.total, 0);
+  const guessed = lines.some(({ product }) => product.unit === 'KG');
   const hasSoldOut = lines.some(({ product }) => !product.isAvailable);
   const canOrder =
     orderType !== null &&
@@ -90,8 +87,9 @@ export function CartSheet({
           type: dineIn ? 'DINE_IN' : 'TAKEAWAY',
           ...(dineIn && { qrToken }),
           ...(note && { note }),
-          items: lines.map(({ product, quantity }) => ({
+          items: lines.map(({ product, variantId, quantity }) => ({
             productId: product.id,
+            ...(variantId && { variantId }),
             quantity,
           })),
         },
@@ -136,16 +134,17 @@ export function CartSheet({
             </p>
           ) : (
             <ul>
-              {lines.map(({ product, quantity }) => (
+              {lines.map(({ key, name, product, quantity, total }) => (
                 <li
-                  key={product.id}
+                  key={key}
                   className="flex items-center gap-3 border-b border-border py-2.5"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium">{product.name}</p>
+                    <p className="font-medium">{name}</p>
                     {product.isAvailable ? (
                       <p className="text-sm text-muted-foreground">
-                        {formatMoney(product.price * quantity)}
+                        {product.unit === 'KG' && '≈ '}
+                        {formatMoney(total)}
                       </p>
                     ) : (
                       <p className="text-sm font-medium text-destructive">
@@ -154,9 +153,15 @@ export function CartSheet({
                     )}
                   </div>
                   <Stepper
-                    name={product.name}
+                    name={name}
                     quantity={quantity}
-                    onChange={(next) => setQuantity(slug, product.id, next)}
+                    step={product.unit === 'KG' ? WEIGHT_STEP : 1}
+                    label={
+                      product.unit === 'KG' ? formatWeight(quantity) : undefined
+                    }
+                    onChange={(next) =>
+                      setQuantity(slug, key, next, product.unit === 'KG')
+                    }
                   />
                 </li>
               ))}
@@ -188,6 +193,11 @@ export function CartSheet({
             <AmountList
               amounts={amountsOf(itemsTotal, orderType ?? 'TAKEAWAY', cafe)}
             />
+            {guessed && (
+              <p className="text-sm text-muted-foreground">
+                {t('cart.weightNote')}
+              </p>
+            )}
             <p className="text-sm text-muted-foreground">
               {t(orderType ? 'cart.payHint' : 'menu.viewOnly')}
             </p>

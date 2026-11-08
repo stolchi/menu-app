@@ -29,6 +29,8 @@ const MENU = {
           description: null,
           price: 45000,
           imageUrl: null,
+          unit: 'PIECE',
+          variants: [],
           isAvailable: true,
         },
         {
@@ -37,6 +39,8 @@ const MENU = {
           description: null,
           price: 8000,
           imageUrl: null,
+          unit: 'PIECE',
+          variants: [],
           isAvailable: false,
         },
       ],
@@ -222,6 +226,82 @@ describe('MenuPage', () => {
       screen.getByRole('button', { name: uz.cart.order, hidden: true }),
     ).toBeDisabled();
     expect(posts).toHaveLength(0);
+  });
+
+  it('orders a size and a guessed weight', async () => {
+    const menu = {
+      ...MENU,
+      categories: [
+        {
+          id: 'c1',
+          name: 'Taomlar',
+          products: [
+            {
+              id: 'pitsa',
+              name: 'Pitsa',
+              description: null,
+              price: 60000,
+              imageUrl: null,
+              isAvailable: true,
+              unit: 'PIECE',
+              variants: [
+                { id: 'v1', name: 'Katta', price: 90000 },
+                { id: 'v2', name: "O'rta", price: 60000 },
+              ],
+            },
+            {
+              id: 'baliq',
+              name: 'Baliq',
+              description: null,
+              price: 120000,
+              imageUrl: null,
+              isAvailable: true,
+              unit: 'KG',
+              variants: [],
+            },
+          ],
+        },
+      ],
+    };
+    const posts = show('/demo', (path) =>
+      path.endsWith('/menu') ? json(menu) : undefined,
+    );
+    await userEvent.click(
+      await screen.findByRole('button', {
+        name: uz.menu.chooseSize.replace('{{name}}', 'Pitsa'),
+      }),
+    );
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: uz.menu.add.replace('{{name}}', 'Pitsa (Katta)'),
+        hidden: true,
+      }),
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: uz.menu.done, hidden: true }),
+    );
+
+    await userEvent.click(await add('Baliq'));
+    expect(screen.getAllByText('1 kg').length).toBeGreaterThan(0);
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: uz.menu.increase.replace('{{name}}', 'Baliq'),
+      }),
+    );
+    expect(screen.getAllByText('1,5 kg').length).toBeGreaterThan(0);
+
+    await openCart();
+    expect(screen.getAllByText("270 000 so'm").length).toBeGreaterThan(0);
+    expect(screen.getByText(uz.cart.weightNote)).toBeInTheDocument();
+    await send();
+    await waitFor(() => expect(posts).toHaveLength(1));
+    expect(posts[0]).toMatchObject({
+      type: 'TAKEAWAY',
+      items: [
+        { productId: 'pitsa', variantId: 'v1', quantity: 1 },
+        { productId: 'baliq', quantity: 1500 },
+      ],
+    });
   });
 
   it('keeps the cart when ordering fails, and says why', async () => {
