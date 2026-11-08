@@ -1,5 +1,5 @@
 import { ChevronRight, Receipt, ShoppingBag } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { ApiError } from '@/shared/api/client';
@@ -14,8 +14,11 @@ import { useCafeTheme } from '@/shared/lib/cafe-theme';
 import { formatMoney } from '@/shared/lib/format';
 import { amountsOf, orderTypeFor } from '@/shared/lib/order-charges';
 import { MessageScreen } from '@/shared/MessageScreen';
+import { useTelegram } from '@/shared/telegram';
 import { cartItems, countOf } from './cart-lines';
 import { CartSheet } from './CartSheet';
+import { useContactStore } from './contact-store';
+import { remoteTypeOf } from './TelegramFields';
 import { useCafeCart, useCartStore } from './cart-store';
 import { CategoryTabs, sectionId } from './CategoryTabs';
 import { ProductRow } from './ProductRow';
@@ -74,6 +77,17 @@ export function MenuPage() {
   const qrToken = params.get('table');
   const [cartOpen, setCartOpen] = useState(false);
   const [sizing, setSizing] = useState<PublicProductDto | null>(null);
+  const telegram = useTelegram();
+  const remoteType = useContactStore((state) => state.remoteType);
+
+  // Telegram knows the customer's name: a first order need not ask for it.
+  useEffect(() => {
+    if (telegram.status !== 'ready') return;
+    const name = telegram.webApp.initDataUnsafe.user?.first_name;
+    if (name && !useContactStore.getState().name) {
+      useContactStore.getState().set({ name });
+    }
+  }, [telegram]);
 
   const menu = usePublicControllerMenu(slug, {
     query: {
@@ -100,8 +114,9 @@ export function MenuPage() {
     [categories],
   );
 
-  if (!menu.data) {
-    if (menu.isPending) return <MenuSkeleton />;
+  if (!menu.data || telegram.status === 'loading') {
+    if (menu.isPending || telegram.status === 'loading')
+      return <MenuSkeleton />;
     return menu.error instanceof ApiError && menu.error.status === 404 ? (
       <MessageScreen title={t('notFound.title')} hint={t('notFound.hint')} />
     ) : (
@@ -120,13 +135,24 @@ export function MenuPage() {
   const badTable =
     qrToken !== null && !table.isPending && verifiedTable === null;
 
+  const inTelegram = telegram.status === 'ready';
   const orderType = orderTypeFor(cafe.orderTypes, verifiedTable !== null);
+  const remoteOrders = cafe.orderTypes.some(
+    (type) => type === 'TAKEAWAY' || type === 'DELIVERY',
+  );
 
   const items = cartItems(cart.lines, products);
   const count = countOf(items);
   const { total } = amountsOf(
     items.reduce((sum, item) => sum + item.total, 0),
-    orderType ?? 'TAKEAWAY',
+    inTelegram
+      ? remoteTypeOf(
+          (['DELIVERY', 'TAKEAWAY'] as const).filter((type) =>
+            cafe.orderTypes.includes(type),
+          ),
+          remoteType,
+        )
+      : (orderType ?? 'TAKEAWAY'),
     cafe,
   );
   let shown = 0;
@@ -147,7 +173,11 @@ export function MenuPage() {
         )}
         <div className="min-w-0">
           <h1 className="truncate text-xl font-bold">{cafe.name}</h1>
-          {orderType === 'DINE_IN' && verifiedTable ? (
+          {inTelegram ? (
+            <p className="text-sm text-muted-foreground">
+              {t('telegram.heading')}
+            </p>
+          ) : orderType === 'DINE_IN' && verifiedTable ? (
             <p className="text-sm font-medium text-primary">
               {t('menu.table', { name: verifiedTable.name })}
             </p>
@@ -161,9 +191,9 @@ export function MenuPage() {
           )}
         </div>
       </header>
-      {orderType === null && (
+      {(inTelegram ? !remoteOrders : orderType === null) && (
         <p role="status" className="mx-4 mb-3 rounded-2xl bg-muted p-3 text-sm">
-          {t('menu.viewOnly')}
+          {t(inTelegram ? 'telegram.notTaking' : 'menu.viewOnly')}
         </p>
       )}
       {badTable && orderType !== null && (
@@ -248,6 +278,7 @@ export function MenuPage() {
         products={products}
         qrToken={verifiedTable ? qrToken : null}
         tableReady={qrToken === null || !table.isPending}
+        telegram={inTelegram ? { initData: telegram.webApp.initData } : null}
         open={cartOpen}
         onClose={() => setCartOpen(false)}
         onUnavailable={() => void menu.refetch()}

@@ -11,7 +11,7 @@ import { useCafeTheme } from '@/shared/lib/cafe-theme';
 import { formatMoney } from '@/shared/lib/format';
 import { lineTotal, quantityLabel } from '@/shared/lib/quantity';
 import { MessageScreen } from '@/shared/MessageScreen';
-import { isOver, stepOf, STEPS } from './order-steps';
+import { headlineKey, isOver, stepOf, stepsFor } from './order-steps';
 import { useOrderUpdates } from './use-order-updates';
 
 /** In case a socket event goes missing while the customer waits. */
@@ -62,7 +62,7 @@ export function OrderStatusPage() {
 
   const { displayNumber, items, type } = order.data;
   const cancelled = order.data.status === 'CANCELLED';
-  const step = stepOf(order.data.status);
+  const step = stepOf(order.data.status, type);
   const isReady = step === 2 && !cancelled;
 
   return (
@@ -80,7 +80,7 @@ export function OrderStatusPage() {
           role="status"
           className={`mt-4 text-xl font-bold ${cancelled ? 'text-destructive' : ''}`}
         >
-          {t(`order.headline.${order.data.status}`)}
+          {t(headlineKey(order.data.status, type))}
         </h1>
         {cancelled && order.data.cancelReason && (
           <p className="mt-2 rounded-2xl bg-destructive/10 p-3 font-medium text-destructive">
@@ -97,7 +97,7 @@ export function OrderStatusPage() {
         )}
         {!cancelled && (
           <ol className="mt-5 flex justify-between gap-1">
-            {STEPS.map((name, index) => {
+            {stepsFor(type).map((name, index) => {
               const done = index <= step;
               return (
                 <li

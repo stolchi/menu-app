@@ -53,10 +53,11 @@
     "steps": {
       "accepted": "Qabul qilindi",
       "cooking": "Tayyorlanmoqda",
-      "ready": "Tayyor"
+      "ready": "Tayyor",
+      "onTheWay": "Yo'lda"
     },
     "headline": {
-      "NEW": "Buyurtmangiz yuborildi",
+      "NEW": "Buyurtmangiz yuborildi. Tez orada siz bilan bog'lanamiz",
       "ACCEPTED": "Buyurtmangiz qabul qilindi",
       "COOKING": "Buyurtmangiz tayyorlanmoqda",
       "READY": "Buyurtmangiz tayyor!",
@@ -70,7 +71,11 @@
     "backToMenu": "Menyuga qaytish",
     "notFound": "Bunday buyurtma topilmadi",
     "notWeighed": "tortilmoqda",
-    "weightNote": "Og'irlik tortilgach narx aniqlanadi"
+    "weightNote": "Og'irlik tortilgach narx aniqlanadi",
+    "deliveryHeadline": {
+      "READY": "Buyurtmangiz tayyor, tez orada yo'lga chiqadi",
+      "SERVED": "Buyurtmangiz yo'lda!"
+    }
   },
   "amounts": {
     "items": "Taomlar",
@@ -78,5 +83,26 @@
     "packaging": "Qadoq",
     "delivery": "Yetkazib berish",
     "total": "Jami"
+  },
+  "telegram": {
+    "orderType": "Buyurtma turi",
+    "type": {
+      "TAKEAWAY": "Olib ketaman",
+      "DELIVERY": "Yetkazib bering"
+    },
+    "phone": "Telefon raqamingiz",
+    "phoneInvalid": "Raqamni +998 90 123 45 67 ko'rinishida yozing",
+    "name": "Ismingiz",
+    "address": "Manzil",
+    "addressPlaceholder": "Ko'cha, uy, xonadon, mo'ljal",
+    "addressRequired": "Manzilni yozing",
+    "locate": "Joylashuvimni yuborish",
+    "locating": "Joylashuv aniqlanmoqda...",
+    "located": "Joylashuv yuborildi",
+    "locateDenied": "Joylashuvni olib bo'lmadi. Manzilni aniqroq yozing: kuryer qo'ng'iroq qiladi.",
+    "payHint": "Buyurtmani tasdiqlash uchun siz bilan bog'lanamiz. To'lov olayotganda qilinadi.",
+    "reopen": "Menyuni botdagi tugma orqali qayta oching",
+    "heading": "Telegram orqali buyurtma",
+    "notTaking": "Bu kafe hozircha Telegram orqali buyurtma qabul qilmaydi"
   }
 }

@@ -1,9 +1,12 @@
 import { X } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { ApiError } from '@/shared/api/client';
-import { usePublicControllerCreateOrder } from '@/shared/api/generated/public/public';
+import {
+  usePublicControllerCreateOrder,
+  useTelegramOrdersControllerCreate,
+} from '@/shared/api/generated/public/public';
 import type {
   PublicCafeDto,
   PublicProductDto,
@@ -14,10 +17,18 @@ import { amountsOf } from '@/shared/lib/order-charges';
 import { formatWeight, WEIGHT_STEP } from '@/shared/lib/quantity';
 import { cartItems } from './cart-lines';
 import { useCafeCart, useCartStore } from './cart-store';
+import { normalizePhone, useContactStore } from './contact-store';
+import {
+  contactReady,
+  remoteTypeOf,
+  TelegramFields,
+  type RemoteType,
+} from './TelegramFields';
 import { Stepper } from './Stepper';
 
 function errorKey(error: unknown) {
   if (!(error instanceof ApiError)) return 'common.errors.network';
+  if (error.status === 401) return 'telegram.reopen';
   if (/is not available/.test(error.message)) {
     return 'common.errors.unavailable';
   }
@@ -33,6 +44,7 @@ export function CartSheet({
   products,
   qrToken,
   tableReady,
+  telegram,
   open,
   onClose,
   onUnavailable,
@@ -46,6 +58,8 @@ export function CartSheet({
   qrToken: string | null;
   /** The table check has finished, so it is known what kind of order this is. */
   tableReady: boolean;
+  /** Opened in Telegram: the order is a delivery or a takeaway, signed by the bot. */
+  telegram: { initData: string } | null;
   open: boolean;
   onClose: () => void;
   /** The menu is out of date: a product ran out since it was loaded. */
@@ -56,7 +70,23 @@ export function CartSheet({
   const dialog = useRef<HTMLDialogElement>(null);
   const cart = useCafeCart(slug);
   const { setQuantity, setNote, finish } = useCartStore.getState();
-  const createOrder = usePublicControllerCreateOrder();
+  const qrOrder = usePublicControllerCreateOrder();
+  const telegramOrder = useTelegramOrdersControllerCreate();
+  const createOrder = telegram ? telegramOrder : qrOrder;
+  const remoteTypes = (['DELIVERY', 'TAKEAWAY'] as const).filter((type) =>
+    cafe.orderTypes.includes(type),
+  );
+  const chosenType = useContactStore((state) => state.remoteType);
+  const remoteType = remoteTypeOf(remoteTypes, chosenType);
+  const setRemoteType = (next: RemoteType) =>
+    useContactStore.getState().set({ remoteType: next });
+  const [checked, setChecked] = useState(false);
+  // In Telegram nobody sits at a table: it is taken away or delivered.
+  const type = telegram
+    ? remoteTypes.length > 0
+      ? remoteType
+      : null
+    : orderType;
 
   useEffect(() => {
     const element = dialog.current;
@@ -70,39 +100,72 @@ export function CartSheet({
   const guessed = lines.some(({ product }) => product.unit === 'KG');
   const hasSoldOut = lines.some(({ product }) => !product.isAvailable);
   const canOrder =
-    orderType !== null &&
+    type !== null &&
     lines.length > 0 &&
     !hasSoldOut &&
-    tableReady &&
+    (telegram !== null || tableReady) &&
     !createOrder.isPending;
+
+  const items = lines.map(({ product, variantId, quantity }) => ({
+    productId: product.id,
+    ...(variantId && { variantId }),
+    quantity,
+  }));
+  const done = ({ publicToken }: { publicToken: string }) => {
+    finish(slug, publicToken);
+    onClose();
+    const query = qrToken
+      ? `?table=${qrToken}`
+      : telegram
+        ? '?via=telegram'
+        : '';
+    void navigate(`/${slug}/order/${publicToken}${query}`);
+  };
+
+  const orderByTelegram = (session: { initData: string }, kind: RemoteType) => {
+    setChecked(true);
+    if (!contactReady(kind)) return;
+    const contact = useContactStore.getState();
+    const note = cart.note.trim();
+    telegramOrder.mutate(
+      {
+        slug,
+        data: {
+          initData: session.initData,
+          type: kind,
+          customerPhone: normalizePhone(contact.phone),
+          ...(contact.name.trim() && { customerName: contact.name.trim() }),
+          ...(kind === 'DELIVERY' && {
+            address: contact.address.trim(),
+            ...(contact.location && { location: contact.location }),
+          }),
+          ...(note && { note }),
+          items,
+        },
+      },
+      { onSuccess: done, onError: onUnavailable },
+    );
+  };
 
   const order = () => {
     if (!canOrder) return;
+    if (telegram) {
+      orderByTelegram(telegram, remoteType);
+      return;
+    }
     const dineIn = orderType === 'DINE_IN' && qrToken !== null;
     const note = cart.note.trim();
-    createOrder.mutate(
+    qrOrder.mutate(
       {
         slug,
         data: {
           type: dineIn ? 'DINE_IN' : 'TAKEAWAY',
           ...(dineIn && { qrToken }),
           ...(note && { note }),
-          items: lines.map(({ product, variantId, quantity }) => ({
-            productId: product.id,
-            ...(variantId && { variantId }),
-            quantity,
-          })),
+          items,
         },
       },
-      {
-        onSuccess: ({ publicToken }) => {
-          finish(slug, publicToken);
-          onClose();
-          const query = qrToken ? `?table=${qrToken}` : '';
-          void navigate(`/${slug}/order/${publicToken}${query}`);
-        },
-        onError: onUnavailable,
-      },
+      { onSuccess: done, onError: onUnavailable },
     );
   };
 
@@ -182,6 +245,14 @@ export function CartSheet({
               />
             </label>
           )}
+          {lines.length > 0 && telegram && remoteTypes.length > 0 && (
+            <TelegramFields
+              types={remoteTypes}
+              type={remoteType}
+              onType={setRemoteType}
+              checked={checked}
+            />
+          )}
         </div>
         {lines.length > 0 && (
           <footer className="space-y-2 border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -191,7 +262,7 @@ export function CartSheet({
               </p>
             ) : null}
             <AmountList
-              amounts={amountsOf(itemsTotal, orderType ?? 'TAKEAWAY', cafe)}
+              amounts={amountsOf(itemsTotal, type ?? 'TAKEAWAY', cafe)}
             />
             {guessed && (
               <p className="text-sm text-muted-foreground">
@@ -199,7 +270,15 @@ export function CartSheet({
               </p>
             )}
             <p className="text-sm text-muted-foreground">
-              {t(orderType ? 'cart.payHint' : 'menu.viewOnly')}
+              {t(
+                telegram
+                  ? type
+                    ? 'telegram.payHint'
+                    : 'telegram.notTaking'
+                  : type
+                    ? 'cart.payHint'
+                    : 'menu.viewOnly',
+              )}
             </p>
             <button
               type="button"
