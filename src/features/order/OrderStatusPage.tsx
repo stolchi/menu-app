@@ -8,7 +8,7 @@ import {
 } from '@/shared/api/generated/public/public';
 import { AmountList } from '@/shared/AmountList';
 import { useCafeTheme } from '@/shared/lib/cafe-theme';
-import { formatMoney } from '@/shared/lib/format';
+import { formatClock, formatMoney } from '@/shared/lib/format';
 import { lineTotal, quantityLabel } from '@/shared/lib/quantity';
 import { MessageScreen } from '@/shared/MessageScreen';
 import { headlineKey, isOver, stepOf, stepsFor } from './order-steps';
@@ -92,6 +92,13 @@ export function OrderStatusPage() {
             {t('order.cancelledHint')}
           </p>
         )}
+        {order.data.status === 'SERVED' &&
+          type === 'DELIVERY' &&
+          order.data.deliveryEta && (
+            <p className="mt-1 font-medium">
+              {t('order.eta', { time: formatClock(order.data.deliveryEta) })}
+            </p>
+          )}
         {order.data.status === 'READY' && type === 'TAKEAWAY' && (
           <p className="mt-1 font-medium">{t('order.readyTakeaway')}</p>
         )}

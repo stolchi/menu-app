@@ -153,6 +153,16 @@ describe('OrderStatusPage', () => {
     extra = {};
   });
 
+  it('tells a delivery customer when the courier will arrive', async () => {
+    status = 'SERVED';
+    extra = { deliveryEta: '2026-01-31T10:30:00Z' };
+    show('DELIVERY');
+    expect(
+      await screen.findByText(uz.order.eta.replace('{{time}}', '15:30')),
+    ).toBeInTheDocument();
+    extra = {};
+  });
+
   it('says so when cancelled, and stops listening', async () => {
     status = 'CANCELLED';
     show();

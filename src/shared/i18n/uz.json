@@ -75,7 +75,8 @@
     "deliveryHeadline": {
       "READY": "Buyurtmangiz tayyor, tez orada yo'lga chiqadi",
       "SERVED": "Buyurtmangiz yo'lda!"
-    }
+    },
+    "eta": "Kuryer taxminan {{time}} gacha yetkazadi"
   },
   "amounts": {
     "items": "Taomlar",
