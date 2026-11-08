@@ -1,0 +1,73 @@
+{
+  "common": {
+    "money": "{{amount}} so'm",
+    "retry": "Qayta urinish",
+    "errors": {
+      "network": "Serverga ulanib bo'lmadi. Internetni tekshirib, qayta urinib ko'ring",
+      "generic": "Xatolik yuz berdi. Qayta urinib ko'ring",
+      "unavailable": "Savatdagi taomlardan biri tugab qoldi. Uni olib tashlang",
+      "conflict": "Buyurtmani hozir qabul qilib bo'lmadi. Qayta urinib ko'ring"
+    }
+  },
+  "notFound": {
+    "title": "Sahifa topilmadi",
+    "hint": "Stoldagi QR kodni qayta skanerlang"
+  },
+  "menu": {
+    "categories": "Taom turlari",
+    "empty": "Menyu hali tayyor emas",
+    "table": "{{name}}",
+    "takeaway": "Olib ketish uchun",
+    "badTable": "Bu QR kod ishlamayapti, shuning uchun buyurtma olib ketish uchun rasmiylashtiriladi. Xodimga ayting.",
+    "soldOut": "Tugadi",
+    "add": "{{name}} ni savatga qo'shish",
+    "increase": "{{name}} sonini oshirish",
+    "decrease": "{{name}} sonini kamaytirish",
+    "yourOrder": "Buyurtmangiz #{{number}}",
+    "yourOrderHint": "Holatini ko'rish",
+    "viewOnly": "Bu menyu faqat ko'rish uchun. Buyurtmani xodimga ayting."
+  },
+  "cart": {
+    "open": "Savat",
+    "items": "{{count}} ta taom",
+    "title": "Savat",
+    "close": "Yopish",
+    "empty": "Savat bo'sh",
+    "soldOut": "Tugadi, olib tashlang",
+    "note": "Izoh",
+    "notePlaceholder": "Masalan, achchiq bo'lmasin",
+    "payHint": "To'lov kassada yoki xodimga qilinadi",
+    "order": "Buyurtma berish",
+    "ordering": "Yuborilmoqda..."
+  },
+  "order": {
+    "number": "Buyurtma raqamingiz",
+    "keepNumber": "Shu raqamni eslab qoling",
+    "steps": {
+      "accepted": "Qabul qilindi",
+      "cooking": "Tayyorlanmoqda",
+      "ready": "Tayyor"
+    },
+    "headline": {
+      "NEW": "Buyurtmangiz yuborildi",
+      "ACCEPTED": "Buyurtmangiz qabul qilindi",
+      "COOKING": "Buyurtmangiz tayyorlanmoqda",
+      "READY": "Buyurtmangiz tayyor!",
+      "SERVED": "Yoqimli ishtaha!",
+      "PAID": "Tashrifingiz uchun rahmat!",
+      "CANCELLED": "Buyurtma bekor qilindi"
+    },
+    "readyTakeaway": "Kassadan olib keting",
+    "cancelledHint": "Savolingiz bo'lsa, xodimga murojaat qiling",
+    "items": "Buyurtma tarkibi",
+    "backToMenu": "Menyuga qaytish",
+    "notFound": "Bunday buyurtma topilmadi"
+  },
+  "amounts": {
+    "items": "Taomlar",
+    "service": "Xizmat haqi {{percent}}%",
+    "packaging": "Qadoq",
+    "delivery": "Yetkazib berish",
+    "total": "Jami"
+  }
+}

@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --color-primary: var(--primary);
+  --color-primary-foreground: #ffffff;
+  --color-background: oklch(0.977 0.012 80);
+  --color-foreground: oklch(0.25 0.03 50);
+  --color-card: oklch(0.998 0.003 80);
+  --color-muted: oklch(0.945 0.015 75);
+  --color-muted-foreground: oklch(0.48 0.025 55);
+  --color-border: oklch(0.9 0.018 75);
+  --color-destructive: oklch(0.52 0.2 27);
+}
+
+:root {
+  --primary: #b0431e;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
